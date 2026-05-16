@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Panorama F&S — Control de Contenedores</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🚢</text></svg>">
+<style>
+  :root {
+    --pan-blue: #0082ca;
+    --pan-blue-light: #24B6E8;
+    --pan-blue-dark: #005a8e;
+    --bg: #0d1117;
+    --bg2: #151b23;
+    --bg3: #1c2330;
+    --bg4: #222d3a;
+    --border: rgba(255,255,255,0.08);
+    --border2: rgba(255,255,255,0.14);
+    --text: #e6edf3;
+    --text2: #8b949e;
+    --text3: #6e7681;
+    --green: #3fb950;
+    --amber: #d29922;
+    --red: #f85149;
+    --purple: #a371f7;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; min-height: 100vh; }
+
+  /* HEADER */
+  .header { background: var(--bg2); border-bottom: 1px solid var(--border); padding: 0 24px; display: flex; align-items: center; justify-content: space-between; height: 60px; position: sticky; top: 0; z-index: 100; }
+  .header-left { display: flex; align-items: center; gap: 14px; }
+  .logo-circle { width: 36px; height: 36px; border-radius: 50%; background: var(--pan-blue); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 15px; color: white; flex-shrink: 0; }
+  .header-title { font-size: 15px; font-weight: 600; color: var(--text); }
+  .header-sub { font-size: 12px; color: var(--text2); margin-top: 1px; }
+  .live-badge { display: flex; align-items: center; gap: 6px; background: rgba(63,185,80,0.1); border: 1px solid rgba(63,185,80,0.3); border-radius: 20px; padding: 4px 10px; font-size: 11px; color: var(--green); }
+  .live-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green); animation: pulse 2s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+  .refresh-btn { background: transparent; border: 1px solid var(--border2); color: var(--text2); border-radius: 6px; padding: 6px 12px; font-size:12px; cursor: pointer; display: flex; align-items: center; gap: 6px; transition: all 0.2s; }
+  .refresh-btn:hover { border-color: var(--pan-blue); color: var(--pan-blue); }
+  .refresh-icon { font-size: 14px; }
+
+  /* MAIN */
+  .main { max-width: 1200px; margin: 0 auto; padding: 24px; }
+
+  /* SUMMARY CARDS */
+  .summary-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; margin-bottom: 28px; }
+  .summary-card { background: var(--bg2); border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; }
+  .summary-label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text3); margin-bottom: 6px; }
+  .summary-value { font-size: 26px; font-weight: 700; }
+  .summary-sub { font-size: 12px; color: var(--text2); margin-top: 4px; }
+  .c-blue { color: var(--pan-blue-light); }
+  .c-green { color: var(--green); }
+  .c-amber { color: var(--amber); }
+  .c-red { color: var(--red); }
+  .c-purple { color: var(--purple); }
+
+  /* SECTION TITLE */
+  .section-title { font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text3); margin-bottom: 14px; display: flex; align-items: center; gap: 8px; }
+  .section-title::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+  /* CONTAINER CARD */
+  .container-card { background: var(--bg2); border: 1px solid var(--border); border-radius: 12px; padding: 18px 20px; margin-bottom: 14px; transition: border-color 0.2s; }
+  .container-card:hover { border-color: var(--border2); }
+  .container-card.arrived { opacity: 0.7; }
+  .container-card.arrived:hover { opacity: 1; }
+
+  .card-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 14px; }
+  .card-left { display: flex; align-items: center; gap: 12px; }
+  .product-icon { width: 44px; height: 44px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 24px; flex-shrink: 0; }
+  .product-icon.mango { background: rgba(210,153,34,0.15); }
+  .product-icon.pineapple { background: rgba(63,185,80,0.1); }
+
+  .bl-info { }
+  .bl-number { font-size: 14px; font-weight: 700; color: var(--text); letter-spacing: 0.02em; }
+  .bl-meta { display: flex; align-items: center; gap: 8px; margin-top: 4px; flex-wrap: wrap; }
+
+  .badge { display: inline-flex; align-items: center; gap: 4px; border-radius: 5px; padding: 2px 8px; font-size: 11px; font-weight: 600; }
+  .badge-size { background: rgba(0,130,202,0.15); color: var(--pan-blue-light); border: 1px solid rgba(0,130,202,0.25); }
+  .badge-supplier { background: rgba(139,148,158,0.1); color: var(--text2); border: 1px solid var(--border); }
+  .badge-status-paid { background: rgba(63,185,80,0.1); color: var(--green); border: 1px solid rgba(63,185,80,0.25); }
+  .badge-status-pending { background: rgba(210,153,34,0.1); color: var(--amber); border: 1px solid rgba(210,153,34,0.25); }
+  .badge-arrived { background: rgba(63,185,80,0.15); color: var(--green); border: 1px solid rgba(63,185,80,0.3); }
+  .badge-customs { background: rgba(163,113,247,0.12); color: var(--purple); border: 1px solid rgba(163,113,247,0.25); }
+
+  .card-right { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; flex-shrink: 0; }
+  .days-left { font-size: 13px; font-weight: 700; }
+  .days-label { font-size: 11px; color: var(--text3); }
+
+  /* FREIGHT LOGOS */
+  .freight-logo { display: inline-flex; align-items: center; gap: 5px; border-radius: 5px; padding: 3px 8px; font-size: 11px; font-weight: 700; letter-spacing: 0.04em; }
+  .freight-wanhai { background: #002060; color: #88aaff; border: 1px solid #1a3a90; }
+  .freight-one { background: #6b0000; color: #ff8888; border: 1px solid #9b1c1c; }
+  .freight-maersk { background: #002540; color: #6bb8ff; border: 1px solid #0a5080; }
+  .freight-hapag { background: #800000; color: #ffd080; border: 1px solid #b04000; }
+  .freight-coyote { background: #1a2200; color: #aadd44; border: 1px solid #3a5500; }
+  .freight-dot { width: 6px; height: 6px; border-radius: 50%; }
+
+  /* PROGRESS BAR */
+  .progress-container { position: relative; }
+  .progress-track { height: 8px; background: var(--bg4); border-radius: 4px; position: relative; overflow: visible; }
+  .progress-fill { height: 100%; border-radius: 4px; transition: width 0.5s ease; position: relative; }
+  .progress-fill.sea { background: linear-gradient(90deg, #005a8e, #0082ca, #24B6E8); }
+  .progress-fill.land { background: linear-gradient(90deg, #3a5500, #639922, #aadd44); }
+  .progress-fill.critical { background: linear-gradient(90deg, #8b0000, #c0392b, #f85149); }
+
+  .ship-icon { position: absolute; top: 50%; transform: translateY(-50%); transition: left 0.5s ease; font-size: 20px; filter: drop-shadow(0 0 6px rgba(0,130,202,0.6)); z-index: 2; }
+  .ship-icon.land-mode { filter: drop-shadow(0 0 6px rgba(100,200,50,0.6)); }
+
+  /* Waypoints */
+  .waypoints { display: flex; justify-content: space-between; margin-top: 8px; }
+  .waypoint { text-align: center; font-size: 10px; color: var(--text3); }
+  .waypoint.active { color: var(--pan-blue-light); }
+
+  /* DATES ROW */
+  .dates-row { display: flex; gap: 20px; margin-top: 12px; flex-wrap: wrap; }
+  .date-item { }
+  .date-label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text3); }
+  .date-value { font-size: 12px; color: var(--text2); margin-top: 2px; font-weight: 500; }
+  .date-value.highlight { color: var(--pan-blue-light); }
+
+  /* ARRIVED SECTION */
+  .arrived-toggle { background: none; border: 1px solid var(--border); border-radius: 8px; color: var(--text2); font-size: 13px; padding: 8px 14px; cursor: pointer; width: 100%; text-align: left; display: flex; align-items: center; justify-content: space-between; transition: all 0.2s; margin-bottom: 14px; }
+  .arrived-toggle:hover { border-color: var(--border2); color: var(--text); }
+  .arrived-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 12px; }
+
+  /* LOADING */
+  .loading-state { text-align: center; padding: 60px 20px; color: var(--text3); }
+  .loading-spinner { width: 32px; height: 32px; border: 2px solid var(--border2); border-top-color: var(--pan-blue); border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 16px; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .error-state { background: rgba(248,81,73,0.08); border: 1px solid rgba(248,81,73,0.25); border-radius: 10px; padding: 16px 20px; color: var(--red); font-size: 13px; margin-bottom: 20px; }
+
+  .config-box { background: var(--bg2); border: 1px solid var(--border2); border-radius: 10px; padding: 20px; max-width: 500px; margin: 40px auto; }
+  .config-box h3 { font-size: 15px; margin-bottom: 12px; }
+  .config-box p { font-size: 13px; color: var(--text2); margin-bottom: 16px; line-height: 1.5; }
+  .config-input { width: 100%; background: var(--bg3); border: 1px solid var(--border2); border-radius: 6px; padding: 8px 12px; color: var(--text); font-size: 13px; font-family: monospace; margin-bottom: 12px; }
+  .config-btn { background: var(--pan-blue); color: white; border: none; border-radius: 6px; padding: 8px 16px; font-size: 13px; cursor: pointer; }
+  .config-btn:hover { background: var(--pan-blue-dark); }
+  .settings-btn { background: none; border: 1px solid var(--border); border-radius: 6px; padding: 5px 10px; color: var(--text3); font-size: 12px; cursor: pointer; }
+  .settings-btn:hover { color: var(--text2); border-color: var(--border2); }
+
+  .empty-state { text-align: center; padding: 40px; color: var(--text3); font-size: 14px; }
+
+  /* ── MOBILE / iPHONE ───────────────────────────────────────────────────── */
+  @media (max-width: 640px) {
+    /* Header */
+    .header { padding: 0 14px; height: auto; min-height: 56px; flex-wrap: wrap; gap: 8px; padding-top: 10px; padding-bottom: 10px; }
+    .header-title { font-size: 13px; }
+    .header-sub { font-size: 11px; }
+    .logo-circle { width: 30px; height: 30px; font-size: 13px; }
+    .live-badge { display: none; } /* hide on mobile to save space */
+    .refresh-btn span:last-child { display: none; } /* icon only */
+    .refresh-btn { padding: 6px 10px; }
+
+    /* Layout */
+    .main { padding: 12px; }
+    .summary-row { grid-template-columns: repeat(2, 1fr); gap: 8px; margin-bottom: 18px; }
+    .summary-card { padding: 10px 12px; }
+    .summary-value { font-size: 22px; }
+    .summary-label { font-size: 10px; }
+    .summary-sub { font-size: 11px; }
+
+    /* Container cards */
+    .container-card { padding: 14px; margin-bottom: 10px; }
+    .card-top { flex-direction: column; gap: 10px; }
+    .card-right { align-items: flex-start; flex-direction: row; flex-wrap: wrap; gap: 8px; }
+    .days-label { display: none; }
+    .product-icon { width: 38px; height: 38px; font-size: 20px; }
+    .bl-number { font-size: 13px; }
+    .bl-meta { gap: 5px; }
+    .badge { font-size: 10px; padding: 2px 6px; }
+    .freight-logo { font-size: 10px; padding: 2px 6px; }
+
+    /* Progress bar waypoints — truncate on mobile */
+    .waypoints { display: none; }
+    .progress-track { height: 10px; } /* slightly taller = easier to see on phone */
+    .ship-icon { font-size: 18px; }
+
+    /* Dates row — stack vertically */
+    .dates-row { flex-direction: column; gap: 8px; margin-top: 10px; }
+    .date-label { font-size: 10px; }
+    .date-value { font-size: 12px; }
+
+    /* Arrived grid */
+    .arrived-grid { grid-template-columns: 1fr; gap: 8px; }
+    .arrived-toggle { font-size: 12px; padding: 8px 12px; }
+
+    /* Config box */
+    .config-box { margin: 20px auto; padding: 16px; }
+
+    /* Section titles */
+    .section-title { font-size: 10px; }
+  }
+
+  /* Safe area for iPhone notch/home bar */
+  @supports (padding-bottom: env(safe-area-inset-bottom)) {
+    body { padding-bottom: env(safe-area-inset-bottom); }
+    .header { padding-left: max(14px, env(safe-area-inset-left)); padding-right: max(14px, env(safe-area-inset-right)); }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-left">
+    <div class="logo-circle">P</div>
+    <div>
+      <div class="header-title">Panorama F&S — Contenedores</div>
+      <div class="header-sub" id="last-update">Cargando...</div>
+    </div>
+  </div>
+  <div style="display:flex;align-items:center;gap:10px">
+    <div class="live-badge"><div class="live-dot"></div>Google Sheets</div>
+    <button class="settings-btn" onclick="showConfig()">⚙ Config</button>
+    <button class="refresh-btn" onclick="loadData()"><span class="refresh-icon">↻</span> Actualizar</button>
+  </div>
+</div>
+
+<div class="main">
+  <div id="config-section" style="display:none">
+    <div class="config-box">
+      <h3>🔧 Configuración</h3>
+      <p>Ingresa tu Google Sheets API Key y el ID del spreadsheet de Control de Contenedores.</p>
+      <label style="font-size:12px;color:var(--text3);display:block;margin-bottom:4px">API Key (Google Sheets)</label>
+      <input class="config-input" id="api-key-input" type="password" placeholder="AIzaSy...">
+      <label style="font-size:12px;color:var(--text3);display:block;margin-bottom:4px">Sheet ID</label>
+      <input class="config-input" id="sheet-id-input" type="text" placeholder="1OwptBPFNknYGorTUfmGdHUlvVb5ViAxck-UUT5AFgV4">
+      <div style="display:flex;gap:8px;align-items:center">
+        <button class="config-btn" onclick="saveConfig()">Guardar y cargar</button>
+        <button class="settings-btn" onclick="hideConfig()">Cancelar</button>
+        <button class="settings-btn" onclick="useDemoData()" style="margin-left:auto">Demo</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="main-content">
+    <div class="loading-state">
+      <div class="loading-spinner"></div>
+      <div>Cargando datos...</div>
+    </div>
+  </div>
+</div>
+
+<script>
+const SHEET_ID_DEFAULT = '1OwptBPFNknYGorTUfmGdHUlvVb5ViAxck-UUT5AFgV4';
+const DATA_TAB = 'CONTROL CONTENEDORES';
+
+// ─── DEMO DATA (mirrors real sheet: A=Carpeta, B=MP, C=Proveedor, D=BL, E=Naviera, F=ETD, G=ETA, H=Días Restantes, I=BL Pagado, J=Aduana)
+// Dates in DD/MM/YYYY as they appear in the real sheet
+const DEMO_DATA = [
+  ['Carpeta','MP','Proveedor','BL','Naviera','ETD','ETA','Días Restantes','BL Pagado','Aduana'],
+  ['C25 - APF WAN HAI 035GX20828','Piña 20ft','APF','035GX20828','WAN HAI','15/4/2026','27/5/2026','11','FALSE','FALSE'],
+  ['C26 - APF MAERSK DEMO123','Mango 40ft','APF','DEMO123456','MAERSK','1/5/2026','7/6/2026','22','FALSE','FALSE'],
+  ['C27 - GCF ONE DEMO456','Piña 40ft','GCF','DEMO456789','ONE','10/5/2026','20/6/2026','35','FALSE','FALSE'],
+  ['C28 - Capitol COYOTE DEMO','Mango 20ft','Capitol','COYOTE2026','COYOTE','14/5/2026','17/5/2026','1','TRUE','FALSE'],
+  ['C21 - GCF WAN HAI 035FX66095','Mango 20ft','GCF','035FX66095','WAN HAI','28/10/2025','12/12/2025','EN PLANTA','TRUE','TRUE'],
+  ['C22 - GCF WAN HAI 035FX73611','Mango 20ft','GCF','035FX73611','WAN HAI','7/12/2025','21/1/2026','EN PLANTA','TRUE','TRUE'],
+  ['C23 - GCF WAN HAI 035FX73279','Mango 20ft','GCF','035FX73279','WAN HAI','26/12/2025','18/2/2026','EN PLANTA','TRUE','TRUE'],
+  ['GCF WAN HAI 035FX80156 (PIÑA)','Piña 40ft','GCF','035FX80156','WAN HAI','9/1/2026','4/3/2026','EN PLANTA','TRUE','TRUE'],
+];
+
+// ─── STATE ────────────────────────────────────────────────────────────────
+let containers = [];
+let arrivedOpen = false;
+
+function getConfig() {
+  return {
+    apiKey: localStorage.getItem('pan_containers_key') || '',
+    sheetId: localStorage.getItem('pan_containers_sheet') || SHEET_ID_DEFAULT,
+  };
+}
+
+function saveConfig() {
+  const key = document.getElementById('api-key-input').value.trim();
+  const id = document.getElementById('sheet-id-input').value.trim() || SHEET_ID_DEFAULT;
+  localStorage.setItem('pan_containers_key', key);
+  localStorage.setItem('pan_containers_sheet', id);
+  hideConfig();
+  loadData();
+}
+
+function showConfig() {
+  const cfg = getConfig();
+  document.getElementById('api-key-input').value = cfg.apiKey;
+  document.getElementById('sheet-id-input').value = cfg.sheetId;
+  document.getElementById('config-section').style.display = 'block';
+  document.getElementById('main-content').style.display = 'none';
+}
+
+function hideConfig() {
+  document.getElementById('config-section').style.display = 'none';
+  document.getElementById('main-content').style.display = 'block';
+}
+
+function useDemoData() {
+  hideConfig();
+  processRows(DEMO_DATA);
+}
+
+// ─── LOAD DATA ────────────────────────────────────────────────────────────
+async function loadData() {
+  const cfg = getConfig();
+  setContent('<div class="loading-state"><div class="loading-spinner"></div><div>Conectando con Google Sheets...</div></div>');
+
+  if (!cfg.apiKey) {
+    processRows(DEMO_DATA);
+    showError('Sin API Key configurada — mostrando datos demo. Haz clic en ⚙ Config para conectar tu hoja real.');
+    return;
+  }
+
+  try {
+    // Pull full rows A:K — A=Carpeta, B=MP, C=Proveedor, D=BL, E=Naviera, F=ETD, G=ETA, H=Días, I=BL Pagado, J=Aduana
+    const range = `'CONTROL CONTENEDORES'!A1:K200`;
+    const url = `https://sheets.googleapis.com/v4/spreadsheets/${cfg.sheetId}/values/${encodeURIComponent(range)}?key=${cfg.apiKey}&valueRenderOption=FORMATTED_VALUE&dateTimeRenderOption=FORMATTED_STRING`;
+    const res = await fetch(url);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data = await res.json();
+    const rows = data.values || [];
+    if (!rows.length) throw new Error('Sin datos en la hoja');
+    processRows(rows); // row[0] is header
+    document.getElementById('last-update').textContent = `Actualizado ${new Date().toLocaleTimeString('es-MX', {hour:'2-digit',minute:'2-digit'})} · Google Sheets`;
+  } catch(e) {
+    processRows(DEMO_DATA);
+    showError(`Error al cargar: ${e.message} — mostrando datos demo.`);
+  }
+}
+
+function showError(msg) {
+  const existing = document.getElementById('error-banner');
+  if (existing) existing.remove();
+  const el = document.createElement('div');
+  el.id = 'error-banner';
+  el.className = 'error-state';
+  el.textContent = '⚠ ' + msg;
+  document.querySelector('.main').insertBefore(el, document.getElementById('main-content'));
+}
+
+function setContent(html) {
+  document.getElementById('main-content').innerHTML = html;
+}
+
+// ─── DATE PARSING — handles DD/M/YYYY, D/MM/YYYY, YYYY-MM-DD ─────────────
+function parseDate(str) {
+  if (!str) return null;
+  str = String(str).trim();
+  // ISO format
+  if (/^\d{4}-\d{2}-\d{2}/.test(str)) return new Date(str);
+  // DD/MM/YYYY or D/M/YYYY (Mexican format from Sheets)
+  const parts = str.split('/');
+  if (parts.length === 3) {
+    const [d, m, y] = parts.map(Number);
+    if (y > 1000) return new Date(y, m - 1, d);
+  }
+  return null;
+}
+
+function isChecked(val) {
+  if (!val) return false;
+  const v = String(val).toUpperCase().trim();
+  return v === 'TRUE' || v === 'VERDADERO' || v === '1' || v === 'SI' || v === 'SÍ' || v === '☑' || v === 'TRUE';
+}
+
+// ─── PROCESS ROWS ─────────────────────────────────────────────────────────
+// Real sheet columns: A=Carpeta(0), B=MP(1), C=Proveedor(2), D=BL(3),
+//   E=Naviera(4), F=ETD(5), G=ETA(6), H=Días Restantes(7), I=BL Pagado(8), J=Aduana(9)
+function processRows(rows) {
+  containers = [];
+  const dataRows = rows.slice(1); // skip header row
+  for (const row of dataRows) {
+    if (!row || row.length < 4) continue;
+
+    const carpeta  = String(row[0] || '').trim();
+    const product  = String(row[1] || '').trim();
+    const supplier = String(row[2] || '').trim();
+    const bl       = String(row[3] || '').trim();
+    const freight  = String(row[4] || '').trim();
+    const etdRaw   = String(row[5] || '').trim();
+    const etaRaw   = String(row[6] || '').trim();
+    const daysLeft = String(row[7] || '').trim();
+    const blPaid   = isChecked(row[8]);
+    const customsPaid = isChecked(row[9]);
+
+    // Skip blank rows and "Archivo" placeholder rows
+    if (!bl || bl === 'BL' || carpeta.toLowerCase() === 'archivo' || (!product && !supplier)) continue;
+
+    const etdDate = parseDate(etdRaw);
+    const etaDate = parseDate(etaRaw);
+    // ETA Toluca: column K if present, else ETA + 14 days for sea, same day for land
+    let etaTolucaDate = row[10] ? parseDate(String(row[10])) : null;
+    if (!etaTolucaDate && etaDate) {
+      const isLandFreight = freight.toUpperCase().includes('COYOTE');
+      etaTolucaDate = new Date(etaDate);
+      if (!isLandFreight) etaTolucaDate.setDate(etaTolucaDate.getDate() + 14);
+    }
+
+    const arrived = daysLeft.toUpperCase() === 'EN PLANTA';
+    const isMango = product.toLowerCase().includes('mango');
+    const is40ft  = product.includes('40');
+    const isLand  = freight.toUpperCase().includes('COYOTE');
+
+    const progress = arrived ? 100 : calcProgress(etdDate, etaDate, isLand);
+
+    containers.push({
+      product, supplier, bl, freight,
+      etd: etdDate, eta: etaDate, etaToluca: etaTolucaDate,
+      daysLeft, blPaid, customsPaid,
+      arrived, isMango, is40ft, isLand, progress
+    });
+  }
+
+  renderDashboard();
+}
+
+function calcProgress(etdDate, etaDate, isLand) {
+  try {
+    if (!etdDate || !etaDate || isNaN(etdDate) || isNaN(etaDate)) return 10;
+    const now = new Date();
+    const total = etaDate - etdDate;
+    const elapsed = now - etdDate;
+    if (elapsed < 0) return 2;
+    if (elapsed > total) return 98;
+    return Math.round((elapsed / total) * 100);
+  } catch { return 50; }
+}
+
+// ─── RENDER ───────────────────────────────────────────────────────────────
+function renderDashboard() {
+  const pending = containers.filter(c => !c.arrived);
+  const arrived = containers.filter(c => c.arrived).sort((a,b) => (b.etaToluca||0) - (a.etaToluca||0));
+
+  const totalPending = pending.length;
+  const blPaidCount = containers.filter(c => c.blPaid).length;
+  const customsPaidCount = containers.filter(c => c.customsPaid).length;
+  const arrivedCount = arrived.length;
+
+  let html = `
+    <div class="summary-row">
+      <div class="summary-card">
+        <div class="summary-label">En tránsito</div>
+        <div class="summary-value c-blue">${totalPending}</div>
+        <div class="summary-sub">contenedores activos</div>
+      </div>
+      <div class="summary-card">
+        <div class="summary-label">BL Pagados</div>
+        <div class="summary-value c-green">${blPaidCount}</div>
+        <div class="summary-sub">de ${containers.length} totales</div>
+      </div>
+      <div class="summary-card">
+        <div class="summary-label">Aduana pagada</div>
+        <div class="summary-value c-purple">${customsPaidCount}</div>
+        <div class="summary-sub">despachos completos</div>
+      </div>
+      <div class="summary-card">
+        <div class="summary-label">En planta</div>
+        <div class="summary-value c-amber">${arrivedCount}</div>
+        <div class="summary-sub">entregados</div>
+      </div>
+    </div>`;
+
+  if (pending.length) {
+    html += `<div class="section-title">En tránsito — ${pending.length} contenedor${pending.length !== 1 ? 'es' : ''}</div>`;
+    pending.forEach(c => { html += renderCard(c); });
+  } else {
+    html += `<div class="empty-state">No hay contenedores en tránsito.</div>`;
+  }
+
+  if (arrived.length) {
+    html += `
+      <div class="section-title" style="margin-top:28px">En planta — ${arrived.length} contenedor${arrived.length !== 1 ? 'es' : ''}</div>
+      <button class="arrived-toggle" onclick="toggleArrived(this)">
+        <span>📦 Historial de contenedores entregados</span>
+        <span id="arrived-chevron">▼ ver</span>
+      </button>
+      <div id="arrived-list" style="display:none">
+        <div class="arrived-grid">`;
+    arrived.forEach(c => { html += renderCard(c, true); });
+    html += `</div></div>`;
+  }
+
+  setContent(html);
+}
+
+function toggleArrived(btn) {
+  arrivedOpen = !arrivedOpen;
+  document.getElementById('arrived-list').style.display = arrivedOpen ? 'block' : 'none';
+  document.getElementById('arrived-chevron').textContent = arrivedOpen ? '▲ ocultar' : '▼ ver';
+}
+
+function freightBadge(freight) {
+  const f = freight.toUpperCase();
+  if (f.includes('WAN HAI') || f.includes('WANHAI')) return `<span class="freight-logo freight-wanhai">🚢 WAN HAI</span>`;
+  if (f.includes('ONE')) return `<span class="freight-logo freight-one">🚢 ONE</span>`;
+  if (f.includes('MAERSK')) return `<span class="freight-logo freight-maersk">🚢 MAERSK</span>`;
+  if (f.includes('HAPAG') || f.includes('HLCU')) return `<span class="freight-logo freight-hapag">🚢 HAPAG LLOYD</span>`;
+  if (f.includes('COYOTE')) return `<span class="freight-logo freight-coyote">🚚 COYOTE</span>`;
+  return `<span class="badge badge-supplier">${freight}</span>`;
+}
+
+function formatDate(d) {
+  if (!d) return '—';
+  try {
+    const dt = (d instanceof Date) ? d : new Date(d);
+    if (isNaN(dt)) return '—';
+    return dt.toLocaleDateString('es-MX', { day: '2-digit', month: 'short', year: 'numeric' });
+  } catch { return '—'; }
+}
+
+function daysLeftDisplay(c) {
+  if (c.arrived) return `<span style="color:var(--green);font-weight:700">EN PLANTA</span>`;
+  const n = parseInt(c.daysLeft);
+  if (!isNaN(n) && n >= 0) {
+    const color = n <= 3 ? 'var(--red)' : n <= 10 ? 'var(--amber)' : 'var(--pan-blue-light)';
+    return `<span style="color:${color};font-weight:700">${n}d</span>`;
+  }
+  // Compute from ETA date
+  if (c.eta) {
+    const diff = Math.ceil((c.eta - new Date()) / 86400000);
+    if (diff < 0) return `<span style="color:var(--amber);font-weight:700">En aduana</span>`;
+    const color = diff <= 3 ? 'var(--red)' : diff <= 10 ? 'var(--amber)' : 'var(--pan-blue-light)';
+    return `<span style="color:${color};font-weight:700">${diff}d</span>`;
+  }
+  return `<span style="color:var(--text3)">—</span>`;
+}
+
+function renderCard(c, compact = false) {
+  const isMango = c.isMango;
+  const icon = isMango ? '🥭' : '🍍';
+  const iconClass = isMango ? 'mango' : 'pineapple';
+  const sizeLabel = c.is40ft ? '40ft' : '20ft';
+  const pct = c.arrived ? 100 : c.progress;
+  const fillClass = c.arrived ? 'sea' : (c.isLand ? 'land' : (pct > 85 ? 'sea' : 'sea'));
+  const shipIcon = c.isLand ? '🚛' : '🚢';
+  const routeLabel = c.isLand ? 'Los Angeles → Laredo → Toluca' : 'Bangkok → Lázaro Cárdenas → Toluca';
+
+  const waypoints = c.isLand
+    ? ['LA, EE.UU.', 'Laredo, TX', 'Toluca, MX']
+    : ['Bangkok, TH', 'Mar Pacífico', 'Lázaro Cárdenas', 'Toluca, MX'];
+
+  const stage = c.arrived ? waypoints.length - 1 : Math.floor((pct / 100) * (waypoints.length - 1));
+
+  // position the ship icon (leave space so it doesn't go off edge)
+  const shipPos = Math.max(0, Math.min(pct, 94));
+
+  const progressBar = `
+    <div class="progress-container">
+      <div class="progress-track" style="position:relative">
+        <div class="progress-fill ${fillClass}" style="width:${pct}%"></div>
+        <div class="ship-icon${c.isLand ? ' land-mode' : ''}" style="left:calc(${shipPos}% - 12px)">${shipIcon}</div>
+      </div>
+      <div class="waypoints">
+        ${waypoints.map((w,i) => `<div class="waypoint${i === stage ? ' active' : ''}">${w}</div>`).join('')}
+      </div>
+    </div>`;
+
+  const statusBadges = [];
+  if (c.blPaid) statusBadges.push(`<span class="badge badge-status-paid">✓ BL Pagado</span>`);
+  else statusBadges.push(`<span class="badge badge-status-pending">⏳ BL Pendiente</span>`);
+  if (c.customsPaid) statusBadges.push(`<span class="badge badge-customs">✓ Aduana</span>`);
+
+  if (c.arrived) {
+    return `
+      <div class="container-card arrived">
+        <div class="card-top">
+          <div class="card-left">
+            <div class="product-icon ${iconClass}">${icon}</div>
+            <div class="bl-info">
+              <div class="bl-number">${c.bl}</div>
+              <div class="bl-meta">
+                <span class="badge badge-size">${sizeLabel}</span>
+                <span class="badge badge-supplier">${c.supplier}</span>
+                <span class="badge badge-arrived">✓ En Planta</span>
+              </div>
+            </div>
+          </div>
+          <div class="card-right">
+            ${freightBadge(c.freight)}
+          </div>
+        </div>
+        <div class="dates-row">
+          <div class="date-item"><div class="date-label">Llegó a planta</div><div class="date-value highlight">${formatDate(c.etaToluca)}</div></div>
+          <div class="date-item"><div class="date-label">Llegó a puerto</div><div class="date-value">${formatDate(c.eta)}</div></div>
+        </div>
+      </div>`;
+  }
+
+  return `
+    <div class="container-card">
+      <div class="card-top">
+        <div class="card-left">
+          <div class="product-icon ${iconClass}">${icon}</div>
+          <div class="bl-info">
+            <div class="bl-number">${c.bl}</div>
+            <div class="bl-meta">
+              <span class="badge badge-size">${sizeLabel}</span>
+              <span class="badge badge-supplier">${c.supplier}</span>
+              ${freightBadge(c.freight)}
+            </div>
+          </div>
+        </div>
+        <div class="card-right">
+          <div class="days-left">${daysLeftDisplay(c)}</div>
+          <div class="days-label">al puerto</div>
+          <div style="margin-top:4px;display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end">${statusBadges.join('')}</div>
+        </div>
+      </div>
+      ${progressBar}
+      <div class="dates-row" style="margin-top:12px;display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px">
+        <div class="date-item"><div class="date-label">ETD (salida)</div><div class="date-value">${formatDate(c.etd)}</div></div>
+        <div class="date-item"><div class="date-label">ETA Puerto</div><div class="date-value highlight">${formatDate(c.eta)}</div></div>
+        <div class="date-item"><div class="date-label">Est. Toluca</div><div class="date-value">${formatDate(c.etaToluca)}</div></div>
+        <div class="date-item"><div class="date-label">Ruta</div><div class="date-value" style="font-size:11px;color:var(--text3)">${routeLabel}</div></div>
+      </div>
+    </div>`;
+}
+
+// ─── INIT ─────────────────────────────────────────────────────────────────
+loadData();
+// Auto-refresh every 5 minutes
+setInterval(loadData, 5 * 60 * 1000);
+</script>
+</body>
+</html>
