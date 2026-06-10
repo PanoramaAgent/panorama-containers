@@ -49,7 +49,6 @@
   --r:10px;--rs:6px;
   --sh:0 1px 4px rgba(0,0,0,.4);
 }
-/* ── Light theme ── */
 .light{
   --bg:#f0f4f8;--s1:#ffffff;--s2:#e8edf5;--s3:#dde3ee;--s4:#cdd5e0;
   --bd:rgba(0,0,0,.09);--bd2:rgba(0,0,0,.16);
@@ -68,10 +67,29 @@ body{background:var(--bg);color:var(--tx);font-family:var(--font);font-size:14px
 /* ── Theme toggle ── */
 .theme-toggle{position:relative;display:flex;align-items:center;cursor:pointer;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none}
 .theme-toggle input{position:absolute;opacity:0;width:0;height:0}
-.toggle-track{width:56px;height:28px;border-radius:14px;background:linear-gradient(135deg,#1e3a5f,#0b1120);transition:background .35s ease;position:relative;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.35);border:1.5px solid rgba(255,255,255,.1)}
-.light .toggle-track{background:linear-gradient(135deg,#f97316,#f59e0b);border-color:rgba(255,255,255,.3);box-shadow:0 2px 8px rgba(249,115,22,.4)}
-.toggle-thumb{position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center;font-size:11px;line-height:1;transition:transform .35s cubic-bezier(.34,1.56,.64,1);box-shadow:0 1px 4px rgba(0,0,0,.3)}
-.light .toggle-thumb{transform:translateX(28px)}
+.toggle-track{
+  width:52px;height:28px;border-radius:14px;
+  background:#1e2738;
+  transition:background .3s ease,box-shadow .3s ease;
+  position:relative;
+  box-shadow:inset 0 1px 3px rgba(0,0,0,.45);
+  border:1px solid rgba(255,255,255,.08);
+}
+.light .toggle-track{
+  background:#f59e0b;
+  border-color:rgba(0,0,0,.06);
+  box-shadow:inset 0 1px 2px rgba(0,0,0,.15),0 0 12px rgba(245,158,11,.45);
+}
+.toggle-thumb{
+  position:absolute;top:2.5px;left:3px;
+  width:21px;height:21px;border-radius:50%;
+  background:#fff;
+  display:flex;align-items:center;justify-content:center;
+  transition:transform .3s cubic-bezier(.4,0,.2,1);
+  box-shadow:0 1px 3px rgba(0,0,0,.35);
+}
+.light .toggle-thumb{transform:translateX(24px)}
+ 
  
 /* ── Header ── */
 .hdr{display:flex;align-items:center;justify-content:space-between;padding:0 24px;height:60px;background:var(--s1);border-bottom:1px solid var(--bd);position:sticky;top:0;z-index:100;transition:background .25s,border-color .25s}
@@ -81,7 +99,8 @@ body{background:var(--bg);color:var(--tx);font-family:var(--font);font-size:14px
 .h-sub{font-size:11px;color:var(--tx3);margin-top:1px;font-family:var(--mono)}
 .hdr-r{display:flex;align-items:center;gap:10px}
 .live-badge{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--tx3);font-family:var(--mono);padding:4px 10px;background:var(--s2);border:1px solid var(--bd);border-radius:20px}
-.dot{width:6px;height:6px;border-radius:50%;background:var(--green);flex-shrink:0;animation:pulse 2s infinite}
+.dot{width:6px;height:6px;border-radius:50%;background:var(--tx3);flex-shrink:0}
+.dot.live{background:var(--green);animation:pulse 2s infinite}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
 .btn-ref{background:var(--s2);border:1px solid var(--bd2);color:var(--tx2);padding:6px 14px;border-radius:var(--rs);font-size:12px;font-family:var(--font);cursor:pointer;display:flex;align-items:center;gap:5px;font-weight:500;transition:all .15s}
 .btn-ref:hover{background:var(--s3);color:var(--tx)}
@@ -91,17 +110,25 @@ body{background:var(--bg);color:var(--tx);font-family:var(--font);font-size:14px
 /* ── Main ── */
 .app{max-width:1200px;margin:0 auto;padding:24px 24px 60px}
  
-/* ── KPI cards ── */
+/* ── KPI cards — sober calm gradients ── */
 .kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:24px}
-.kpi{border-radius:var(--r);padding:14px 16px;box-shadow:0 2px 12px rgba(0,0,0,.25);position:relative;overflow:hidden;border:none;cursor:default}
-.kpi::after{content:'';position:absolute;top:-20px;right:-20px;width:70px;height:70px;border-radius:50%;background:rgba(255,255,255,.10);pointer-events:none}
-.kpi-lbl{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.8px;color:rgba(255,255,255,.75);margin-bottom:6px}
-.kpi-val{font-size:26px;font-weight:700;letter-spacing:-.5px;line-height:1.1;color:#fff}
-.kpi-sub{font-size:10px;color:rgba(255,255,255,.65);margin-top:4px}
-.kpi.c-blue {background:linear-gradient(135deg,#1d4ed8,#3b82f6)}
-.kpi.c-green{background:linear-gradient(135deg,#059669,#10b981)}
-.kpi.c-purple{background:linear-gradient(135deg,#6d28d9,#a78bfa)}
-.kpi.c-amber{background:linear-gradient(135deg,#b45309,#f59e0b)}
+.kpi{
+  border-radius:var(--r);padding:15px 16px;
+  position:relative;overflow:hidden;border:none;
+  box-shadow:0 1px 3px rgba(0,0,0,.18),0 4px 14px rgba(0,0,0,.16);
+}
+.kpi::before{
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(135deg,rgba(255,255,255,.10) 0%,transparent 45%);
+  pointer-events:none;z-index:0;
+}
+.kpi-lbl{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.9px;color:rgba(255,255,255,.82);margin-bottom:7px;position:relative;z-index:1}
+.kpi-val{font-size:23px;font-weight:700;letter-spacing:-.6px;line-height:1.1;color:#fff;position:relative;z-index:1;font-variant-numeric:tabular-nums}
+.kpi-sub{font-size:10px;color:rgba(255,255,255,.65);margin-top:4px;position:relative;z-index:1}
+.kpi.c-blue  {background:linear-gradient(150deg,#3d5fc4 0%,#6285e3 100%)}
+.kpi.c-green {background:linear-gradient(150deg,#2f8f5b 0%,#55b984 100%)}
+.kpi.c-amber {background:linear-gradient(150deg,#e09a3e 0%,#f0bc6b 100%)}
+.kpi.c-purple{background:linear-gradient(150deg,#7558bf 0%,#9d82dd 100%)}
  
 /* ── Section heading ── */
 .sh{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:1px;color:var(--tx3);margin-bottom:10px;display:flex;align-items:center;gap:8px}
@@ -148,7 +175,7 @@ body{background:var(--bg);color:var(--tx);font-family:var(--font);font-size:14px
  
 /* ── Progress bar — two-stage ── */
 .progress-container{position:relative;padding-bottom:4px}
-.progress-track-wrap{position:relative;height:8px}
+.progress-track-wrap{position:relative;height:8px;overflow:visible}
 .track-bg{position:absolute;top:0;height:100%;background:var(--s3)}
 .track-bg.seg-sea {left:0;width:70%;border-radius:4px 0 0 4px}
 .track-bg.seg-land{left:70%;width:30%;border-radius:0 4px 4px 0}
@@ -157,7 +184,7 @@ body{background:var(--bg);color:var(--tx);font-family:var(--font);font-size:14px
 .track-fill.seg-sea-fill {left:0;border-radius:4px 0 0 4px;background:linear-gradient(90deg,#1d4ed8,#4f87ff,#60a5fa);max-width:70%}
 .track-fill.seg-land-fill{left:70%;border-radius:0 4px 4px 0;background:linear-gradient(90deg,#3a5500,#639922,#aadd44);max-width:30%}
 .track-fill.seg-all-land {left:0;border-radius:4px;background:linear-gradient(90deg,#3a5500,#639922,#aadd44)}
-.transit-icon{position:absolute;top:50%;transform:translate(-50%,-50%);font-size:18px;z-index:5;transition:left .6s ease;pointer-events:none;line-height:1}
+.transit-icon{position:absolute;top:50%;transform:translate(-50%,-50%);font-size:16px;z-index:5;transition:left .6s ease;pointer-events:none;line-height:1;margin-top:0}
 .transit-icon.mode-sea {filter:drop-shadow(0 0 4px rgba(79,135,255,.8))}
 .transit-icon.mode-land{filter:drop-shadow(0 0 4px rgba(150,220,50,.8))}
  
@@ -204,7 +231,7 @@ body{background:var(--bg);color:var(--tx);font-family:var(--font);font-size:14px
   .h-title{font-size:13px}
   .app{padding:12px 12px 40px}
   .kpi-grid{grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:16px}
-  .kpi-val{font-size:22px}
+  .kpi-val{font-size:20px}
   .container-card{padding:12px}
   .card-top{flex-direction:column;gap:8px}
   .card-right{align-items:flex-start;flex-direction:row;flex-wrap:wrap;gap:8px}
@@ -233,10 +260,15 @@ body{background:var(--bg);color:var(--tx);font-family:var(--font);font-size:14px
     </div>
   </div>
   <div class="hdr-r">
-    <div class="live-badge"><div class="dot"></div>Google Sheets</div>
+    <div class="live-badge"><div class="dot live"></div>Google Sheets</div>
     <label class="theme-toggle" title="Cambiar tema">
       <input type="checkbox" id="theme-chk" onchange="toggleTheme(this)">
-      <div class="toggle-track"><div class="toggle-thumb" id="toggle-thumb">🌙</div></div>
+      <div class="toggle-track"><div class="toggle-thumb" id="toggle-thumb">
+          <!-- moon icon (dark mode) -->
+          <svg id="icon-moon" viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="#1e3a5f" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3a7 7 0 0 0 9.79 9.79z"/></svg>
+          <!-- sun icon (light mode) -->
+          <svg id="icon-sun" viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="#b45309" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display:none"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+        </div></div>
     </label>
     <button class="settings-btn btn-cfg" onclick="showConfig()" title="Configuración">⚙</button>
     <button class="btn-ref" onclick="loadData()">↻ <span>Actualizar</span></button>
@@ -715,16 +747,11 @@ function renderCard(c, compact = false) {
  
 // ── THEME ────────────────────────────────────────────────────────────────
 function toggleTheme(chk) {
-  const thumb = document.getElementById('toggle-thumb');
-  if (chk.checked) {
-    document.getElementById('root').classList.add('light');
-    thumb.textContent = '☀️';
-    localStorage.setItem('pan_theme', 'light');
-  } else {
-    document.getElementById('root').classList.remove('light');
-    thumb.textContent = '🌙';
-    localStorage.setItem('pan_theme', 'dark');
-  }
+  const isLight = chk.checked;
+  document.getElementById('root').classList.toggle('light', isLight);
+  document.getElementById('icon-moon').style.display = isLight ? 'none' : 'block';
+  document.getElementById('icon-sun').style.display  = isLight ? 'block' : 'none';
+  localStorage.setItem('pan_theme', isLight ? 'light' : 'dark');
 }
 // Restore saved theme on load
 (function(){
@@ -732,9 +759,11 @@ function toggleTheme(chk) {
   if (saved === 'light') {
     document.getElementById('root').classList.add('light');
     const chk = document.getElementById('theme-chk');
-    const thumb = document.getElementById('toggle-thumb');
     if (chk) chk.checked = true;
-    if (thumb) thumb.textContent = '☀️';
+    const moon = document.getElementById('icon-moon');
+    const sun  = document.getElementById('icon-sun');
+    if (moon) moon.style.display = 'none';
+    if (sun)  sun.style.display  = 'block';
   }
 })();
  
